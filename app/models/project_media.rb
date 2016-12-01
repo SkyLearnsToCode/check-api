@@ -6,12 +6,8 @@ class ProjectMedia < ActiveRecord::Base
   belongs_to :user
 
   after_create :set_search_context, :set_initial_media_status
-
-  notifies_slack on: :create,
-                 if: proc { |pm| m = pm.media; m.current_user.present? && m.current_team.present? && m.current_team.setting(:slack_notifications_enabled).to_i === 1 },
-                 message: proc { |pm| pm.slack_notification_message },
-                 channel: proc { |pm| m = pm.media; m.project.setting(:slack_channel) || m.current_team.setting(:slack_channel) },
-                 webhook: proc { |pm| m = pm.media; m.current_team.setting(:slack_webhook) }
+  
+  notifies_webhooks proc { |pm| m = pm.media; m.current_team.blank? ? [] : m.current_team.setting(:subscriptions) }
 
   notifies_pusher on: :create,
                   event: 'media_updated',
@@ -39,15 +35,6 @@ class ProjectMedia < ActiveRecord::Base
     st.status = Status.default_id(self.media, self.project)
     st.created_at = self.created_at
     st.save!
-  end
-
-  def slack_notification_message
-    m = self.media
-    data = m.data(self.project)
-    type, text = data['quote'].blank? ?
-      [ 'link', data['title'] ] :
-      [ 'claim', data['quote'] ]
-    "*#{m.user.name}* added a new #{type}: <#{m.origin}/project/#{m.project_id}/media/#{m.id}|*#{text}*>"
   end
 
   private

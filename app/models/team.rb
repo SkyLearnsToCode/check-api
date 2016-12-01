@@ -19,7 +19,6 @@ class Team < ActiveRecord::Base
   validates :subdomain, uniqueness: true, on: :create
   validate :subdomain_is_available, on: :create
   validates :logo, size: true
-  validate :slack_webhook_format
   validate :custom_media_statuses_format
   validate :custom_source_statuses_format
 
@@ -140,13 +139,6 @@ class Team < ActiveRecord::Base
       rescue
         errors.add(:base, 'Subdomain is not available')
       end
-    end
-  end
-
-  def slack_webhook_format
-    webhook = self.get_slack_webhook
-    if !webhook.blank? && /\Ahttps?:\/\/hooks\.slack\.com\/services\/[^\s]+\z/.match(webhook).nil?
-      errors.add(:base, 'Slack webhook format is wrong')
     end
   end
 

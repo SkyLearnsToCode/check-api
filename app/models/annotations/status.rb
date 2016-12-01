@@ -7,12 +7,6 @@ class Status
   validates :annotated_type, included: { values: ['Media', 'Source', nil] }
   validate :status_is_valid
 
-  notifies_slack on: :save,
-                 if: proc { |s| s.should_notify? },
-                 message: proc { |s| data = s.annotated.data(s.context); "*#{s.current_user.name}* changed the verification status on <#{s.origin}/project/#{s.context_id}/media/#{s.annotated_id}|#{data['title']}> from *#{s.id_to_label(s.previous_annotated_status)}* to *#{s.id_to_label(s.status)}*" },
-                 channel: proc { |s| s.context.setting(:slack_channel) || s.current_team.setting(:slack_channel) },
-                 webhook: proc { |s| s.current_team.setting(:slack_webhook) }
-
   before_validation :store_previous_status, :normalize_status
 
   def self.core_verification_statuses(annotated_type)

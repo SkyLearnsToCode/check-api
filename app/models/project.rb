@@ -18,12 +18,6 @@ class Project < ActiveRecord::Base
 
   has_annotations
 
-  notifies_slack on: :create,
-                 if: proc { |p| p.current_user.present? && p.team.setting(:slack_notifications_enabled).to_i === 1 },
-                 message: proc { |p| "*#{p.current_user.name}* created a project: <#{p.origin}/project/#{p.id}|*#{p.title}*>" },
-                 channel: proc { |p| p.setting(:slack_channel) || p.team.setting(:slack_channel) },
-                 webhook: proc { |p| p.team.setting(:slack_webhook) }
-
   notifies_pusher on: :create,
                   event: 'project_created',
                   targets: proc { |p| [p.team] },
