@@ -1,20 +1,22 @@
 sudo: required
 language: ruby
 services:
+- postgresql
 - docker
 addons:
+  postgresql: '9.4'
   code_climate:
     repo_token:
       secure: uR2UyB80Mzpnn6+uUheuVTLNgwgeA8xf55F78WN+70AgMi/dHCdSzrm1FB5uETxNqdobCYHRJkSKqoufd7hrHdILBTuXHrTSGdkEjM78rP3phk+wLhzbXsCVVy1SW66c3uXdZDAId0vE8U9eI9noWLytf29wmASQMcsOpooDLxBvFx4r0TeETmNxuEMkTVxJ0UraPljAlS6Lob/gxm5BXF+u3CUQL5Y2wNNlOoXRUuJMcODrQR03+IgKRDfwmA987F7/RCMWSfqAzMts2kWcbXzsySatmTOlJH1Wten+bMNbIbfrmP1kkI5EdNDLmTcVJAviwMfzG1BklmT8r6B8bKNhcCRWiNXbscheja2l5Q6jzOkLpSBqYGmOqlLZktoGKqwNu9J5ncUiscGMNAWnolZgjq2WreD/v5L58PJtTf5pd/lbmo2l9E8fCndIURQiuQOiHM0i0SlnygFHvrE2TUHY4JPsCIg/h4sAuAwtEFGjmAZuCPch3KbKx24Sc+xE5zJ5rx5841tlnPyFyBLMy3DxRywYkbFuVUZO8I4nKmvHucgMaRsPre9aP9Ne/9pN01A42y5eBC4PurNBtMNBw5hq+hLJvMhANzcmYMt0FS6k/NwVmOCfRXyNmc6QDWzbhzqIuoc2s7EowSnkGIZLly5Zmkhe2mSy38uFBXSlq1M=
 bundler_args: "--jobs 3 --retry 3 --without nothing"
 before_install:
-  - cd .travis && docker-compose -f ./docker-compose.yml up -d
+  - cd .travis && docker-compose -f ./docker-compose.yml up -d && cd -
 before_script:
   - cp config/config.yml.example config/config.yml
   - cp config/initializers/secret_token.rb.example config/initializers/secret_token.rb
   - cp config/database.yml.travis config/database.yml
   - docker ps -a
-  - cd .travis && docker-compose -f ./docker-compose.yml exec postgres psql -c 'create database travis_ci_test;' -U postgres
+  - psql -c 'CREATE DATABASE travis_ci_test;' -U postgres
   - RAILS_ENV=test bundle exec rake db:migrate
 script: bundle exec rake test:coverage
 rvm:
