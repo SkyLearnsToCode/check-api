@@ -1,0 +1,42 @@
+version: '2'
+services:
+
+  postgres:
+    image: postgres
+    ports:
+      - 127.0.0.1:5432:5432
+    environment:
+      POSTGRES_PASSWORD: postgres
+    # networks:
+    #   checknet:
+    #     ipv4_address: 172.22.0.101
+
+  elasticsearch:
+    image: meedan/elasticsearch
+    ports:
+      - 127.0.0.1:9200:9200
+    volumes:
+      - ./elasticsearch/elasticsearch.yml:/usr/share/elasticsearch/config/elasticsearch.yml
+    # networks:
+    #   checknet:
+    #     ipv4_address: 172.22.0.102
+
+  redis:
+    image: redis
+    ports:
+      - 127.0.0.1:6379:6379
+    # networks:
+    #   checknet:
+    #     ipv4_address: 172.22.0.103
+        
+# networks:
+#   checknet:
+#     driver: bridge
+#     driver_opts:
+#       com.docker.network.enable_ipv6: "false"
+#     ipam:
+#       driver: default
+#       config:
+#       - subnet: 172.22.0.0/16
+#         gateway: 172.22.0.1
+    
