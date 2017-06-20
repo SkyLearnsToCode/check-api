@@ -1,16 +1,24 @@
 version: '2'
 services:
 
-  postgres:
-    image: postgres
+  redis:
+    image: redis
     ports:
-      - 127.0.0.1:5432:5432
-    environment:
-      POSTGRES_PASSWORD: postgres
+      - 127.0.0.1:6379:6379
     # networks:
     #   checknet:
-    #     ipv4_address: 172.22.0.101
+    #     ipv4_address: 172.22.0.103
 
+  # postgres:
+  #   image: postgres
+  #   ports:
+  #     - 127.0.0.1:5432:5432
+  #   environment:
+  #     POSTGRES_PASSWORD: postgres
+  #   # networks:
+  #   #   checknet:
+  #   #     ipv4_address: 172.22.0.101
+        
   elasticsearch:
     image: meedan/elasticsearch
     ports:
@@ -21,14 +29,6 @@ services:
     #   checknet:
     #     ipv4_address: 172.22.0.102
 
-  redis:
-    image: redis
-    ports:
-      - 127.0.0.1:6379:6379
-    # networks:
-    #   checknet:
-    #     ipv4_address: 172.22.0.103
-        
 # networks:
 #   checknet:
 #     driver: bridge
