@@ -5,8 +5,6 @@ SourceType = GraphqlCrudOperations.define_default_type do
   interfaces [NodeIdentification.interface]
 
   field :id, field: GraphQL::Relay::GlobalIdField.new('Source')
-  field :updated_at, types.String
-  field :created_at, types.String
   field :image, types.String
   field :description, !types.String
   field :name, !types.String
@@ -17,6 +15,12 @@ SourceType = GraphqlCrudOperations.define_default_type do
   connection :accounts, -> { AccountType.connection_type } do
     resolve ->(source, _args, _ctx) {
       source.accounts
+    }
+  end
+
+  connection :account_sources, -> { AccountSourceType.connection_type } do
+    resolve ->(source, _args, _ctx) {
+      source.account_sources
     }
   end
 
@@ -61,6 +65,10 @@ SourceType = GraphqlCrudOperations.define_default_type do
       source.tags
     }
   end
+
+  instance_exec :source, &GraphqlCrudOperations.field_log
+
+  instance_exec :source, &GraphqlCrudOperations.field_log_count
 
   instance_exec :source, &GraphqlCrudOperations.field_verification_statuses
 end

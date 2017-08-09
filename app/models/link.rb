@@ -1,10 +1,11 @@
 class Link < Media
   include PenderData
-  
+
   validates :url, presence: true, on: :create
   validate :validate_pender_result, on: :create
+  validate :pender_result_is_a_media, on: :create
   validate :url_is_unique, on: :create
-  
+
   after_create :set_pender_result_as_annotation, :set_account
 
   def domain
@@ -21,14 +22,7 @@ class Link < Media
     path = ''
     begin
       pender_data = self.get_saved_pender_data
-      path = case self.domain
-             when 'twitter.com'
-               pender_data['entities']['media'][0]['media_url_https'] || pender_data['entities']['media'][0]['media_url']
-             when 'facebook.com'
-               pender_data['photos'][0]
-             else
-               pender_data['picture']
-             end
+      path = pender_data['picture']
     rescue
     end
     path.to_s
@@ -45,16 +39,14 @@ class Link < Media
   private
 
   def set_account
-    unless self.pender_data.nil?
-      account = Account.new
-      account.url = self.pender_data['author_url']
-      if account.save
-        self.account = account
-      else
-        self.account = Account.where(url: account.url).last
-      end
+    if !self.pender_data.nil? && !self.pender_data['author_url'].blank?
+      self.account = Account.create_for_source(self.pender_data['author_url'])
       self.save!
     end
+  end
+
+  def pender_result_is_a_media
+    errors.add(:base, 'Sorry, this is not a media') if !self.pender_data.nil? && self.pender_data['type'] != 'item'
   end
 
   def url_is_unique

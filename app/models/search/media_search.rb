@@ -6,6 +6,7 @@ class MediaSearch
   attribute :project_id, String
   attribute :annotated_type, String
   attribute :annotated_id, String
+  attribute :associated_type, String
   attribute :status, String
   attribute :title, String, mapping: { analyzer: 'check' }
   attribute :description, String, mapping: { analyzer: 'check' }
@@ -25,5 +26,4 @@ class MediaSearch
     self.send("annotated_type=", obj.class.name)
     self.send("annotated_id=", obj.id)
   end
-
 end

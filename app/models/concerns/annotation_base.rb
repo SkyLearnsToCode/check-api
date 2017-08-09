@@ -98,6 +98,7 @@ module AnnotationBase
       annotated = self.annotated
       unless annotated.nil?
         annotated.skip_check_ability = true
+        annotated.skip_notifications = true # the notification will be triggered by the annotation already
         annotated.updated_at = Time.now
         annotated.save!
       end
@@ -140,6 +141,10 @@ module AnnotationBase
 
   def project_media
     self.annotated
+  end
+
+  def project_source
+    self.annotated if self.annotated_type == 'ProjectSource'
   end
 
   def project
@@ -192,6 +197,7 @@ module AnnotationBase
 
   def get_team
     team = []
+    obj = self.annotated
     obj = self.annotated.project if self.annotated.respond_to?(:project)
     if !obj.nil? and obj.respond_to?(:team)
       team = [obj.team.id] unless obj.team.nil?
@@ -248,7 +254,7 @@ module AnnotationBase
 
   def load_polymorphic(name)
     type, id = self.send("#{name}_type"), self.send("#{name}_id")
-    return nil if type.blank? && id.blank?
+    return nil if type.blank? || id.blank?
     Rails.cache.fetch("find_#{type.parameterize}_#{id}", expires_in: 30.seconds, race_condition_ttl: 30.seconds) do
       type.constantize.find(id)
     end

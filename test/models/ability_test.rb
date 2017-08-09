@@ -1038,6 +1038,81 @@ class AbilityTest < ActiveSupport::TestCase
     end
   end
 
+  test "journalist permissions for account source" do
+    u = create_user
+    u2 = create_user
+    t = create_team
+    t2 = create_team
+    a = create_valid_account
+    own_s = create_source user: u, team: t
+    s = create_source user: u2, team: t
+    s2 = create_source user: u, team: t2
+    tu = create_team_user user: u , team: t, role: 'journalist'
+    as = create_account_source source: s, account: a
+    own_as = create_account_source source: own_s, account: a
+    as2 = create_account_source source: s2, account: a
+    with_current_user_and_team(u, t) do
+      ability = Ability.new
+      assert ability.can?(:create, own_s)
+      assert ability.can?(:update, own_as)
+      assert ability.cannot?(:destroy, own_as)
+      assert ability.cannot?(:update, as)
+      assert ability.cannot?(:destroy, as)
+      assert ability.cannot?(:update, as2)
+      assert ability.cannot?(:destroy, as2)
+    end
+  end
+
+  test "editor permissions for account source" do
+    u = create_user
+    u2 = create_user
+    t = create_team
+    t2 = create_team
+    a = create_valid_account
+    own_s = create_source user: u, team: t
+    s = create_source user: u2, team: t
+    s2 = create_source user: u, team: t2
+    tu = create_team_user user: u , team: t, role: 'editor'
+    as = create_account_source source: s, account: a
+    own_as = create_account_source source: own_s, account: a
+    as2 = create_account_source source: s2, account: a
+    with_current_user_and_team(u, t) do
+      ability = Ability.new
+      assert ability.can?(:create, own_s)
+      assert ability.can?(:update, own_as)
+      assert ability.cannot?(:destroy, own_as)
+      assert ability.can?(:update, as)
+      assert ability.cannot?(:destroy, as)
+      assert ability.cannot?(:update, as2)
+      assert ability.cannot?(:destroy, as2)
+    end
+  end
+
+  test "owner permissions for account source" do
+    u = create_user
+    u2 = create_user
+    t = create_team
+    t2 = create_team
+    a = create_valid_account
+    own_s = create_source user: u, team: t
+    s = create_source user: u2, team: t
+    s2 = create_source user: u, team: t2
+    tu = create_team_user user: u , team: t, role: 'owner'
+    as = create_account_source source: s, account: a
+    own_as = create_account_source source: own_s, account: a
+    as2 = create_account_source source: s2, account: a
+    with_current_user_and_team(u, t) do
+      ability = Ability.new
+      assert ability.can?(:create, own_s)
+      assert ability.can?(:update, own_as)
+      assert ability.can?(:destroy, own_as)
+      assert ability.can?(:update, as)
+      assert ability.can?(:destroy, as)
+      assert ability.cannot?(:update, as2)
+      assert ability.cannot?(:destroy, as2)
+    end
+  end
+
   test "should get permissions" do
     u = create_user
     t = create_team current_user: u
@@ -1431,5 +1506,76 @@ class AbilityTest < ActiveSupport::TestCase
     assert ability.cannot?(:update, pm)
     assert ability.cannot?(:destroy, pm)
     ApiKey.current = nil
+  end
+
+  test "api key cud permissions" do
+    a = create_api_key
+    t = create_team private: true
+    t2 = create_team
+    u = create_bot_user api_key_id: a.id
+    tu = create_team_user team: t, user: u, role: 'owner'
+    u = User.find(u.id)
+    ApiKey.current = a
+    User.current = u
+    ability = Ability.new
+    assert ability.cannot?(:create, Team)
+    assert ability.can?(:update, t)
+    assert ability.cannot?(:update, t2)
+    assert ability.cannot?(:destroy, t)
+    assert ability.cannot?(:create, User)
+    assert ability.cannot?(:destroy, u)
+    assert ability.cannot?(:create, TeamUser)
+    assert ability.cannot?(:update, tu)
+    assert ability.cannot?(:destroy, tu)
+    ApiKey.current = nil
+    User.current = nil
+  end
+
+  test "bot user permissions" do
+    u = create_user
+    t = create_team
+    tu = create_team_user team: t, user: u, role: 'owner'
+    b = create_bot_user
+    with_current_user_and_team(u, t) do
+      ability = Ability.new
+      assert ability.cannot?(:create, BotUser)
+      assert ability.cannot?(:update, b)
+      assert ability.cannot?(:destroy, b)
+    end
+    u2 = create_user is_admin: true
+    with_current_user_and_team(u2, t) do
+      ability = Ability.new
+      assert ability.can?(:create, BotUser)
+      assert ability.can?(:update, b)
+      assert ability.can?(:destroy, b)
+    end
+  end
+
+  test "annotation permissions" do
+    u = create_user
+    t = create_team
+    tu = create_team_user team: t, user: u, role: 'owner'
+    p = create_project team: t
+    pm = create_project_media project: p
+    c = create_comment annotated: pm
+
+    u2 = create_user
+    t2 = create_team
+    tu2 = create_team_user team: t2, user: u2, role: 'owner'
+    p2 = create_project team: t2
+    pm2 = create_project_media project: p2
+    c2 = create_comment annotated: pm2
+
+    with_current_user_and_team(u2, t2) do
+      ability = Ability.new
+      assert ability.cannot?(:create, c)
+      assert ability.can?(:create, c2)
+    end
+
+    with_current_user_and_team(u, t) do
+      ability = Ability.new
+      assert ability.cannot?(:create, c2)
+      assert ability.can?(:create, c)
+    end
   end
 end
