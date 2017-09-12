@@ -28,13 +28,15 @@ class TestController < ApplicationController
     render_success 'user', u
   end
 
-  def create_team_and_two_users
+  def create_team_project_and_two_users
     t = create_team
     u1 = create_user
     u2 = create_user
-    ret = {:team =>t, :user1 => u1, :user2 => u2}
     create_team_user team: t, user: u1, role: 'owner'
     create_team_user team: t, user: u2, role: 'contributor'
+    pr = create_project team: t, current_user: u1
+    ret = {:team =>t, :user1 => u1, :user2 => u2, :project => pr}
+
     render_success 'team_users', ret
   end
 
