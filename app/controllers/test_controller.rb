@@ -28,6 +28,16 @@ class TestController < ApplicationController
     render_success 'user', u
   end
 
+  def create_team_and_two_users
+    t = create_team
+    u1 = create_user
+    u2 = create_user
+    ret = {:team =>t, :user1 => u1, :user2 => u2}
+    create_team_user team: t, user: u1, role: 'owner'
+    create_team_user team: t, user: u2, role: 'contributor'
+    render_success 'team_users', ret
+  end
+
   def new_team
     user = User.where(email: params[:email]).last
     User.current = user
