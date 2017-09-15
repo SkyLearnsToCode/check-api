@@ -95,8 +95,9 @@ class TestController < ApplicationController
 
   def media_status
     pm = ProjectMedia.find(params[:pm_id])
-    st = create_status(status: params[:status], annotated: pm)
-    st.save
+    s = pm.annotations.where(annotation_type: 'status').last.load
+    s.status = params[:status]
+    s.save!
     render_success 'project_media', pm
   end
 
