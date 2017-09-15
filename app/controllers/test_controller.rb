@@ -48,6 +48,13 @@ class TestController < ApplicationController
     render_success 'team', t
   end
 
+  def update_suggested_tags
+    t = Team.find(params[:team_id])
+    t.suggested_tags=params[:tags]
+    t.save
+    render_success 'team', t
+  end
+
   def new_project
     Team.current = Team.find(params[:team_id])
     p = create_project params
@@ -84,6 +91,13 @@ class TestController < ApplicationController
     User.current = nil
     Team.current = nil
     render_success 'project_source', ps
+  end
+
+  def media_status
+    pm = ProjectMedia.find(params[:pm_id])
+    st = create_status(status: params[:status], annotated: pm)
+    st.save
+    render_success 'project_media', pm
   end
 
   protected
